@@ -1,0 +1,58 @@
+#page {
+	padding: 25px;
+}
+
+* {
+	font-size: 20pt;
+}
+
+.bubble {
+	border-radius: 25px;
+	border: 2px solid black;
+	padding: 23px;
+	margin: 23px;
+}
+
+.center-parent > * {
+	display: block;
+	margin: auto;
+}
+
+.inline {
+	display: inline-block;
+}
+
+.pack {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+p {
+	max-width: 300px;
+}
+
+#hand .card {
+	cursor: pointer;
+}
+
+.hand_card.selected {
+	background-color: grey;
+}
+
+.board-button {
+	width: 280px;
+	height: 400px;
+}
+
+.board-button:hover {
+	background-color: grey;
+}
+
+.answer_img {
+	position: fixed;
+	height: 100%;
+	right: 0;
+	top: 0;
+	margin-right: 100%;
+	opacity: 0.8;
+}
