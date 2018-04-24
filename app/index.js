@@ -1,5 +1,5 @@
-var express = require('express');
 var socket = require('socket.io');
+var express = require('express');
 var http = require('http');
 var eSession = require('express-session');
 var sharedsession = require('express-socket.io-session');
@@ -36,7 +36,7 @@ io.on('connection', function(client) {
 			var clients = rooms[roomName].clients;
 			clients[clientId] = false;
 			setTimeout(function() {
-				checkClosedRoom(roomName);
+				checkEmptyRoom(roomName);
 			}, 3000);
 		}
 	});
@@ -74,7 +74,7 @@ io.on('connection', function(client) {
 			if (roomName !== undefined) {
 				delete rooms[roomName].clients[clientId];
 				delete clientToRoom[clientId];
-				checkClosedRoom(roomName);
+				checkEmptyRoom(roomName);
 				return;
 			}
 		} else if (data.endpoint === 'close') {
@@ -94,78 +94,16 @@ io.on('connection', function(client) {
 	});
 });
 
-function checkClosedRoom(roomName) {
+function checkEmptyRoom(roomName) {
 	var clients = rooms[roomName].clients;
 	for (var otherClientId in clients) {
 		if (clients[otherClientId]) return;
 	}
-	console.log('closing room', roomName);
+	console.log('deleting room', roomName);
 	for (var otherClientId in clients) {
 		delete clientToRoom[otherClientId];
 	}
 	delete rooms[roomName];
-}
-
-var apiUrl = 'https://quizlet.com/webapi/3.1/';
-var termsUrl = apiUrl + 'terms?filters[isDeleted]=0&filters[setId]=';
-var setUrl = apiUrl + 'sets/';
-var searchUrl = setUrl + 'search?filters[isDeleted]=0&perPage=9&query=';
-app.get('/query', function(req, res) {
-	var setId = req.query.id;
-	if (!(Number(setId) > 0)) {
-		var query = setId;
-		get(searchUrl + query, function(response) {
-			setId = response.models.set[0].id;
-			getSet(setId, res);
-		});
-	} else {
-		getSet(setId, res);
-	}
-});
-
-function get(url, callback) {
-	request({ uri: url, method: 'GET' }, function(error, resp, body) {
-		if (error || resp.statusCode !== 200) {
-			console.log(query);
-			console.error('error', error);
-			console.error(JSON.stringify(JSON.parse(body), null, 2));
-		} else {
-			var response = JSON.parse(body).responses[0];
-			callback(response);
-		}
-	});
-}
-
-function getSet(setId, res) {
-	var title;
-	var terms;
-	function sendSet() {
-		res.send({ title: title, terms: terms, id: setId });
-	}
-	get(termsUrl + setId, function(response) {
-		var rawTerms = response.models.term;
-		terms = rawTerms
-			.map(function(term) {
-				return {
-					word: term.word,
-					definition: term.definition,
-					index: term.rank,
-					image: term._imageUrl,
-				};
-			})
-			.sort(function(t1, t2) {
-				return t1.index - t2.index;
-			});
-		if (title !== undefined) {
-			sendSet();
-		}
-	});
-	get(setUrl + setId, function(response) {
-		title = response.models.set[0].title;
-		if (terms !== undefined) {
-			sendSet();
-		}
-	});
 }
 
 app.use(express.static('public'));
